@@ -58,15 +58,6 @@ export function safeDiv(amount0: BigDecimal, amount1: BigDecimal): BigDecimal {
   }
 }
 
-function isStablecoin(tokenId: string): bool {
-  for (let i = 0; i < STABLECOINS.length; i++) {
-    if (STABLECOINS[i] == tokenId) {
-      return true;
-    }
-  }
-  return false;
-}
-
 /**
  * Search through graph to find derived Eth per token.
  * @todo update to be derived ETH (add stablecoin estimates)
@@ -76,9 +67,9 @@ export function findEthPerToken(token: Token): BigDecimal {
     return ONE_BD;
   }
 
-  if (isStablecoin(token.id)) {
+  if (STABLECOINS.includes(token.id)) {
     const bundle = Bundle.load("1")!;
-    return safeDiv(ONE_BD, bundle.ethPriceUSD);
+    return safeDiv(ONE_BD, bundle.ethPrice);
   }
 
   // loop through whitelist and check if paired with any
@@ -132,8 +123,8 @@ export function getTrackedVolumeUSD(
   pair: Pair
 ): BigDecimal {
   let bundle = Bundle.load("1")!;
-  let price0 = token0.derivedETH.times(bundle.ethPriceUSD);
-  let price1 = token1.derivedETH.times(bundle.ethPriceUSD);
+  let price0 = token0.derivedETH.times(bundle.ethPrice);
+  let price1 = token1.derivedETH.times(bundle.ethPrice);
 
   // if less than 5 LPs, require high minimum reserve amount amount or return 0
   if (pair.liquidityProviderCount.lt(BigInt.fromI32(5))) {
@@ -199,8 +190,8 @@ export function getTrackedLiquidityUSD(
   token1: Token
 ): BigDecimal {
   let bundle = Bundle.load("1")!;
-  let price0 = token0.derivedETH.times(bundle.ethPriceUSD);
-  let price1 = token1.derivedETH.times(bundle.ethPriceUSD);
+  let price0 = token0.derivedETH.times(bundle.ethPrice);
+  let price1 = token1.derivedETH.times(bundle.ethPrice);
 
   // both are whitelist tokens, take average of both amounts
   if (WHITELIST.includes(token0.id) && WHITELIST.includes(token1.id)) {
@@ -228,8 +219,8 @@ export function getTokenTrackedLiquidityUSD(
   companionToken: Token
 ): BigDecimal {
   let bundle = Bundle.load("1")!;
-  let price0 = tokenForPricing.derivedETH.times(bundle.ethPriceUSD);
-  let price1 = companionToken.derivedETH.times(bundle.ethPriceUSD);
+  let price0 = tokenForPricing.derivedETH.times(bundle.ethPrice);
+  let price1 = companionToken.derivedETH.times(bundle.ethPrice);
 
   // both are whitelist tokens, take average of both amounts
   if (
