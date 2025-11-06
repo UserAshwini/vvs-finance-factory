@@ -1,0 +1,209 @@
+# -------------------------------
+# Uniswap V2 Subgraph Schema
+# -------------------------------
+
+# -------------------------------
+# Uniswap V2 Subgraph Schema
+# -------------------------------
+
+type UniswapFactory @entity(immutable: false) {
+  id: ID!
+  pairCount: BigInt!
+  totalVolumeUSD: BigDecimal!
+  totalVolumeETH: BigDecimal!
+  untrackedVolumeUSD: BigDecimal!
+  totalLiquidityUSD: BigDecimal!
+  totalLiquidityETH: BigDecimal!
+  txCount: BigInt!
+}
+
+type Token @entity(immutable: false) {
+  id: ID!
+  symbol: String!
+  name: String!
+  decimals: BigInt!
+  totalSupply: BigInt!
+  tradeVolume: BigDecimal!
+  tradeVolumeUSD: BigDecimal!
+  untrackedVolumeUSD: BigDecimal!
+  txCount: BigInt!
+  totalLiquidity: BigDecimal!
+  derivedETH: BigDecimal!
+  whitelistPairs: [Pair!]!
+}
+
+type Pair @entity(immutable: false) {
+  id: ID!
+  token0: Token!
+  token1: Token!
+  reserve0: BigDecimal!
+  reserve1: BigDecimal!
+  totalSupply: BigDecimal!
+  reserveETH: BigDecimal!
+  reserveUSD: BigDecimal!
+  trackedReserveETH: BigDecimal!
+  token0Price: BigDecimal!
+  token1Price: BigDecimal!
+  volumeToken0: BigDecimal!
+  volumeToken1: BigDecimal!
+  volumeUSD: BigDecimal!
+  untrackedVolumeUSD: BigDecimal!
+  txCount: BigInt!
+  createdAtTimestamp: BigInt!
+  createdAtBlockNumber: BigInt!
+  liquidityProviderCount: BigInt!
+}
+
+type User @entity(immutable: false) {
+  id: ID!
+  liquidityPositions: [LiquidityPosition!]! @derivedFrom(field: "user")
+}
+
+type LiquidityPosition @entity(immutable: false) {
+  id: ID!
+  user: User!
+  pair: Pair!
+  liquidityTokenBalance: BigDecimal!
+}
+
+type Transaction @entity(immutable: false) {
+  id: ID!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  mints: [String!]!
+  burns: [String!]!
+  swaps: [String!]!
+}
+
+type Mint @entity(immutable: false) {
+  id: ID!
+  transaction: Transaction!
+  timestamp: BigInt!
+  pair: Pair!
+  to: Bytes!
+  liquidity: BigDecimal!
+  amount0: BigDecimal
+  amount1: BigDecimal
+  logIndex: BigInt
+  sender: Bytes
+  amountUSD: BigDecimal
+}
+
+type Burn @entity(immutable: false) {
+  id: ID!
+  transaction: Transaction!
+  timestamp: BigInt!
+  pair: Pair!
+  liquidity: BigDecimal!
+  amount0: BigDecimal
+  amount1: BigDecimal
+  to: Bytes
+  sender: Bytes
+  needsComplete: Boolean
+  feeTo: Bytes
+  feeLiquidity: BigDecimal
+  logIndex: BigInt
+  amountUSD: BigDecimal
+}
+
+type Swap @entity(immutable: false) {
+  id: ID!
+  transaction: Transaction!
+  timestamp: BigInt!
+  pair: Pair!
+  sender: Bytes!
+  from: Bytes!
+  amount0In: BigDecimal!
+  amount1In: BigDecimal!
+  amount0Out: BigDecimal!
+  amount1Out: BigDecimal!
+  to: Bytes!
+  logIndex: BigInt
+  amountUSD: BigDecimal!
+}
+
+type UniswapDayData @entity(immutable: false) {
+  id: ID!
+  date: Int!
+  dailyVolumeETH: BigDecimal!
+  dailyVolumeUSD: BigDecimal!
+  dailyVolumeUntracked: BigDecimal!
+  totalVolumeETH: BigDecimal!
+  totalLiquidityETH: BigDecimal!
+  totalVolumeUSD: BigDecimal!
+  totalLiquidityUSD: BigDecimal!
+  txCount: BigInt!
+}
+
+type PairDayData @entity(immutable: false) {
+  id: ID!
+  date: Int!
+  pairAddress: Bytes!
+  token0: Token!
+  token1: Token!
+  dailyVolumeToken0: BigDecimal!
+  dailyVolumeToken1: BigDecimal!
+  dailyVolumeUSD: BigDecimal!
+  dailyTxns: BigInt!
+  totalSupply: BigDecimal!
+  reserve0: BigDecimal!
+  reserve1: BigDecimal!
+  reserveUSD: BigDecimal!
+  token0Price: BigDecimal!
+  token1Price: BigDecimal!
+}
+
+type PairHourData @entity(immutable: false) {
+  id: ID!
+  hourStartUnix: Int!
+  pair: Pair!
+  hourlyVolumeToken0: BigDecimal!
+  hourlyVolumeToken1: BigDecimal!
+  hourlyVolumeUSD: BigDecimal!
+  totalSupply: BigDecimal
+  hourlyTxns: BigInt!
+  reserve0: BigDecimal!
+  reserve1: BigDecimal!
+  reserveUSD: BigDecimal!
+}
+
+type TokenDayData @entity(immutable: false) {
+  id: ID!
+  date: Int!
+  token: Token!
+  priceUSD: BigDecimal!
+  dailyVolumeToken: BigDecimal!
+  dailyVolumeETH: BigDecimal!
+  dailyVolumeUSD: BigDecimal!
+  totalLiquidityToken: BigDecimal!
+  totalLiquidityETH: BigDecimal!
+  totalLiquidityUSD: BigDecimal!
+  dailyTxns: BigInt!
+}
+
+type TokenHourData @entity(immutable: false) {
+  id: ID!
+  periodStartUnix: Int!
+  token: Token!
+  volume: BigDecimal!
+  volumeUSD: BigDecimal!
+  untrackedVolumeUSD: BigDecimal!
+  totalValueLocked: BigDecimal!
+  totalValueLockedUSD: BigDecimal!
+  priceUSD: BigDecimal!
+  feesUSD: BigDecimal!
+  open: BigDecimal!
+  high: BigDecimal!
+  low: BigDecimal!
+  close: BigDecimal!
+}
+
+type Bundle @entity(immutable: true) {
+  id: ID!
+  ethPriceUSD: BigDecimal!
+}
+
+type PairTokenLookup @entity(immutable: true) {
+  id: ID!
+  pair: Pair!
+}
