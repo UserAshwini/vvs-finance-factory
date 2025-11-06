@@ -264,7 +264,7 @@ export function handleSync(event: Sync): void {
 
   // update ETH price now that reserves could have changed
   let bundle = Bundle.load("1")!;
-  bundle.ethPriceUSD = getEthPriceInUSD();
+  bundle.ethPrice = getEthPriceInUSD();
   bundle.save();
 
   token0.derivedETH = findEthPerToken(token0 as Token);
@@ -274,13 +274,13 @@ export function handleSync(event: Sync): void {
 
   // get tracked liquidity - will be 0 if neither is in whitelist
   let trackedLiquidityETH: BigDecimal;
-  if (bundle.ethPriceUSD.notEqual(ZERO_BD)) {
+  if (bundle.ethPrice.notEqual(ZERO_BD)) {
     trackedLiquidityETH = getTrackedLiquidityUSD(
       pair.reserve0,
       token0 as Token,
       pair.reserve1,
       token1 as Token
-    ).div(bundle.ethPriceUSD);
+    ).div(bundle.ethPrice);
   } else {
     trackedLiquidityETH = ZERO_BD;
   }
@@ -290,15 +290,13 @@ export function handleSync(event: Sync): void {
   pair.reserveETH = pair.reserve0
     .times(token0.derivedETH as BigDecimal)
     .plus(pair.reserve1.times(token1.derivedETH as BigDecimal));
-  pair.reserveUSD = pair.reserveETH.times(bundle.ethPriceUSD);
+  pair.reserveUSD = pair.reserveETH.times(bundle.ethPrice);
 
   // use tracked amounts globally
   uniswap.totalLiquidityETH = uniswap.totalLiquidityETH.plus(
     trackedLiquidityETH
   );
-  uniswap.totalLiquidityUSD = uniswap.totalLiquidityETH.times(
-    bundle.ethPriceUSD
-  );
+  uniswap.totalLiquidityUSD = uniswap.totalLiquidityETH.times(bundle.ethPrice);
 
   // now correctly set liquidity amounts for each token
   token0.totalLiquidity = token0.totalLiquidity.plus(pair.reserve0);
@@ -354,7 +352,7 @@ export function handleMint(event: Mint): void {
   let amountTotalUSD = token1.derivedETH
     .times(token1Amount)
     .plus(token0.derivedETH.times(token0Amount))
-    .times(bundle.ethPriceUSD);
+    .times(bundle.ethPrice);
 
   // update txn counts
   pair.txCount = pair.txCount.plus(ONE_BI);
@@ -424,7 +422,7 @@ export function handleBurn(event: Burn): void {
   let amountTotalUSD = token1.derivedETH
     .times(token1Amount)
     .plus(token0.derivedETH.times(token0Amount))
-    .times(bundle.ethPriceUSD);
+    .times(bundle.ethPrice);
 
   // update txn counts
   uniswap.txCount = uniswap.txCount.plus(ONE_BI);
@@ -501,7 +499,7 @@ export function handleSwap(event: Swap): void {
       .div(BigDecimal.fromString("2"));
   }
 
-  let derivedAmountUSD = derivedAmountETH.times(bundle.ethPriceUSD);
+  let derivedAmountUSD = derivedAmountETH.times(bundle.ethPrice);
 
   // only accounts for volume through white listed tokens
   let trackedAmountUSD = getTrackedVolumeUSD(
@@ -513,10 +511,10 @@ export function handleSwap(event: Swap): void {
   );
 
   let trackedAmountETH: BigDecimal;
-  if (bundle.ethPriceUSD.equals(ZERO_BD)) {
+  if (bundle.ethPrice.equals(ZERO_BD)) {
     trackedAmountETH = ZERO_BD;
   } else {
-    trackedAmountETH = trackedAmountUSD.div(bundle.ethPriceUSD);
+    trackedAmountETH = trackedAmountUSD.div(bundle.ethPrice);
   }
 
   // update token0 global volume and token liquidity stats
@@ -650,9 +648,7 @@ export function handleSwap(event: Swap): void {
     amount0Total.times(token0.derivedETH as BigDecimal)
   );
   token0DayData.dailyVolumeUSD = token0DayData.dailyVolumeUSD.plus(
-    amount0Total
-      .times(token0.derivedETH as BigDecimal)
-      .times(bundle.ethPriceUSD)
+    amount0Total.times(token0.derivedETH as BigDecimal).times(bundle.ethPrice)
   );
   token0DayData.save();
 
@@ -664,9 +660,7 @@ export function handleSwap(event: Swap): void {
     amount1Total.times(token1.derivedETH as BigDecimal)
   );
   token1DayData.dailyVolumeUSD = token1DayData.dailyVolumeUSD.plus(
-    amount1Total
-      .times(token1.derivedETH as BigDecimal)
-      .times(bundle.ethPriceUSD)
+    amount1Total.times(token1.derivedETH as BigDecimal).times(bundle.ethPrice)
   );
   token1DayData.save();
 }
