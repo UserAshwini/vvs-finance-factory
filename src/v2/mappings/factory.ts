@@ -1,5 +1,4 @@
 /* eslint-disable prefer-const */
-import { BigInt } from "@graphprotocol/graph-ts";
 import { log } from "@graphprotocol/graph-ts";
 
 import { PairCreated } from "../../../generated/Factory/Factory";
@@ -21,11 +20,11 @@ import {
 } from "../../common/helpers";
 
 export function handleNewPair(event: PairCreated): void {
-  // Load factory (create if first exchange)
+  // load factory (create if first exchange)
   let factory = UniswapFactory.load(FACTORY_ADDRESS);
   if (factory === null) {
     factory = new UniswapFactory(FACTORY_ADDRESS);
-    factory.pairCount = ZERO_BI;
+    factory.pairCount = 0;
     factory.totalVolumeETH = ZERO_BD;
     factory.totalLiquidityETH = ZERO_BD;
     factory.totalVolumeUSD = ZERO_BD;
@@ -33,20 +32,19 @@ export function handleNewPair(event: PairCreated): void {
     factory.totalLiquidityUSD = ZERO_BD;
     factory.txCount = ZERO_BI;
 
-    // Create new bundle
+    // create new bundle
     let bundle = new Bundle("1");
-    bundle.ethPriceUSD = ZERO_BD;
+    bundle.ethPrice = ZERO_BD;
     bundle.save();
   }
-
-  factory.pairCount = factory.pairCount.plus(BigInt.fromI32(1));
+  factory.pairCount = factory.pairCount + 1;
   factory.save();
 
-  // Create tokens
+  // create the tokens
   let token0 = Token.load(event.params.token0.toHexString());
   let token1 = Token.load(event.params.token1.toHexString());
 
-  // Fetch info if null
+  // fetch info if null
   if (token0 === null) {
     token0 = new Token(event.params.token0.toHexString());
     token0.symbol = fetchTokenSymbol(event.params.token0);
@@ -54,8 +52,9 @@ export function handleNewPair(event: PairCreated): void {
     token0.totalSupply = fetchTokenTotalSupply(event.params.token0);
     let decimals = fetchTokenDecimals(event.params.token0);
 
+    // bail if we couldn't figure out the decimals
     if (decimals === null) {
-      log.debug("mybug: the decimals on token0 was null", []);
+      log.debug("mybug the decimal on token 0 was null", []);
       return;
     }
 
@@ -65,10 +64,11 @@ export function handleNewPair(event: PairCreated): void {
     token0.tradeVolumeUSD = ZERO_BD;
     token0.untrackedVolumeUSD = ZERO_BD;
     token0.totalLiquidity = ZERO_BD;
+    // token0.allPairs = []
     token0.txCount = ZERO_BI;
-    token0.whitelistPairs = [];
   }
 
+  // fetch info if null
   if (token1 === null) {
     token1 = new Token(event.params.token1.toHexString());
     token1.symbol = fetchTokenSymbol(event.params.token1);
@@ -76,23 +76,21 @@ export function handleNewPair(event: PairCreated): void {
     token1.totalSupply = fetchTokenTotalSupply(event.params.token1);
     let decimals = fetchTokenDecimals(event.params.token1);
 
+    // bail if we couldn't figure out the decimals
     if (decimals === null) {
-      log.debug("mybug: the decimals on token1 was null", []);
       return;
     }
-
     token1.decimals = decimals;
     token1.derivedETH = ZERO_BD;
     token1.tradeVolume = ZERO_BD;
     token1.tradeVolumeUSD = ZERO_BD;
     token1.untrackedVolumeUSD = ZERO_BD;
     token1.totalLiquidity = ZERO_BD;
+    // token1.allPairs = []
     token1.txCount = ZERO_BI;
-    token1.whitelistPairs = [];
   }
 
-  // Create pair entity
-  let pair = new Pair(event.params.pair.toHexString());
+  let pair = new Pair(event.params.pair.toHexString()) as Pair;
   pair.token0 = token0.id;
   pair.token1 = token1.id;
   pair.liquidityProviderCount = ZERO_BI;
@@ -112,16 +110,15 @@ export function handleNewPair(event: PairCreated): void {
   pair.token0Price = ZERO_BD;
   pair.token1Price = ZERO_BD;
 
-  // Create the tracked contract based on the template
+  // create the tracked contract based on the template
   PairTemplate.create(event.params.pair);
 
-  // Save entities
+  // save updated values
   token0.save();
   token1.save();
   pair.save();
   factory.save();
 
-  // Pair lookup for fast querying
   let pairLookup0 = new PairTokenLookup(
     event.params.token0
       .toHexString()

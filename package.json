@@ -3,7 +3,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "codegen": "graph codegen",
-    "build": "graph build",
+    "build": "node api.js && graph build",
     "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ vvs-finance-factory",
     "create-local": "graph create --node http://localhost:8020/ vvs-finance-factory",
     "remove-local": "graph remove --node http://localhost:8020/ vvs-finance-factory",
@@ -29,5 +29,6 @@
     "typescript": "^4.9.4",
     "yargs": "17.7.2",
     "matchstick-as": "0.6.0"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"
 }
